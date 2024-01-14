@@ -25,8 +25,8 @@ export function activate(context: ExtensionContext) {
 
     // Create the language client and start the client.
     client = new LanguageClient(
-        "locale-service",
-        "Locale Service",
+        "rust-lsp-extension-template",
+        "rust-lsp-extension-template",
         serverOptions,
         clientOptions
     );
