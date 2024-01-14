@@ -1,0 +1,40 @@
+{
+  "name": "rust-lsp-extension-template",
+  "description": "Rust lsp extension template for vscode.",
+  "author": "ren-wei",
+  "license": "MIT",
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ren-wei/rust-lsp-extension-template.git"
+  },
+  "publisher": "ren-wei",
+  "categories": [],
+  "keywords": [],
+  "engines": {
+    "vscode": "^1.70.1"
+  },
+  "activationEvents": [
+    "onLanguage:typescript"
+  ],
+  "main": "./client/out/extension",
+  "contributes": {
+    "configuration": {}
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -b",
+    "watch": "tsc -b -w",
+    "lint": "eslint ./client/src --ext .ts,.tsx",
+    "postinstall": "cd client && npm install && cd ..",
+    "build": "cd server && cargo build && cd .. && npx vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^16.11.7",
+    "@typescript-eslint/eslint-plugin": "^5.42.0",
+    "@typescript-eslint/parser": "^5.42.0",
+    "eslint": "^8.26.0",
+    "eslint-plugin-strict-typescript": "^1.0.3",
+    "typescript": "^4.9.4"
+  }
+}
