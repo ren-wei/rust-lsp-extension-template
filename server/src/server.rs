@@ -3,11 +3,11 @@ use std::sync::Arc;
 
 use lsp_textdocument::TextDocuments;
 use tokio::sync::RwLock;
-use tower_lsp::jsonrpc::Result;
+use tower_lsp::jsonrpc::{Error, Result};
 use tower_lsp::lsp_types::{
-    DidChangeTextDocumentParams, DidCloseTextDocumentParams, DidOpenTextDocumentParams,
-    InitializeParams, InitializeResult, InitializedParams, MessageType, ServerCapabilities,
-    ServerInfo, TextDocumentSyncCapability, TextDocumentSyncKind,
+    DidChangeTextDocumentParams, DidCloseTextDocumentParams, DidOpenTextDocumentParams, Hover,
+    HoverParams, InitializeParams, InitializeResult, InitializedParams, MessageType,
+    ServerCapabilities, ServerInfo, TextDocumentSyncCapability, TextDocumentSyncKind,
 };
 use tower_lsp::{Client, LanguageServer};
 
@@ -117,7 +117,13 @@ impl LanguageServer for LspServer {
         self.info("did_close done").await;
     }
 
+    async fn hover(&self, _params: HoverParams) -> Result<Option<Hover>> {
+        self.error("method not found").await;
+        Err(Error::method_not_found())
+    }
+
     async fn shutdown(&self) -> Result<()> {
+        self.log("shutdown").await;
         Ok(())
     }
 }
