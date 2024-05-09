@@ -1,25 +1,26 @@
-use std::fmt::Display;
 use std::sync::Arc;
 
+use core::fmt::Debug;
 use lsp_textdocument::TextDocuments;
 use tokio::sync::RwLock;
 use tower_lsp::jsonrpc::{Error, Result};
 use tower_lsp::lsp_types::{
     DidChangeTextDocumentParams, DidCloseTextDocumentParams, DidOpenTextDocumentParams, Hover,
-    HoverParams, InitializeParams, InitializeResult, InitializedParams, MessageType,
-    ServerCapabilities, ServerInfo, TextDocumentSyncCapability, TextDocumentSyncKind,
+    HoverParams, InitializeParams, InitializeResult, InitializedParams, ServerCapabilities,
+    ServerInfo, TextDocumentSyncCapability, TextDocumentSyncKind,
 };
 use tower_lsp::{Client, LanguageServer};
+use tracing::{error, info, warn};
 
 pub struct LspServer {
-    client: Client,
+    _client: Arc<Client>,
     is_shared: bool,
     text_documents: Arc<RwLock<TextDocuments>>,
 }
 
 impl LspServer {
     pub fn new(
-        client: Client,
+        client: Arc<Client>,
         shared_text_documents: Option<Arc<RwLock<TextDocuments>>>,
     ) -> LspServer {
         let is_shared;
@@ -31,31 +32,19 @@ impl LspServer {
             Arc::new(RwLock::new(TextDocuments::new()))
         };
         LspServer {
-            client,
+            _client: client,
             is_shared,
             text_documents,
         }
     }
+}
 
-    async fn log<M>(&self, message: M)
-    where
-        M: Display + Send + Sync,
-    {
-        self.client.log_message(MessageType::LOG, message).await;
-    }
-
-    async fn info<M>(&self, message: M)
-    where
-        M: Display + Send + Sync,
-    {
-        self.client.log_message(MessageType::INFO, message).await;
-    }
-
-    async fn error<M>(&self, message: M)
-    where
-        M: Display + Send + Sync,
-    {
-        self.client.log_message(MessageType::ERROR, message).await;
+impl Debug for LspServer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("LspServer")
+            .field("_client", &self._client)
+            .field("is_shared", &self.is_shared)
+            .finish()
     }
 }
 
@@ -77,12 +66,12 @@ impl LanguageServer for LspServer {
     }
 
     async fn initialized(&self, _params: InitializedParams) {
-        self.info("initialized").await;
-        self.info("initialized done").await;
+        info!("initialized");
+        info!("initialized done");
     }
 
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
-        self.info("did_open").await;
+        info!("did_open");
         if !self.is_shared {
             let mut text_documents = self.text_documents.write().await;
             text_documents.listen(
@@ -90,11 +79,11 @@ impl LanguageServer for LspServer {
                 &serde_json::to_value(&params).unwrap(),
             );
         }
-        self.info("did_open done").await;
+        info!("did_open done");
     }
 
     async fn did_change(&self, params: DidChangeTextDocumentParams) {
-        self.info("did_change").await;
+        info!("did_change");
         if !self.is_shared {
             let mut text_documents = self.text_documents.write().await;
             text_documents.listen(
@@ -102,11 +91,11 @@ impl LanguageServer for LspServer {
                 &serde_json::to_value(&params).unwrap(),
             );
         }
-        self.info("did_change done").await;
+        info!("did_change done");
     }
 
     async fn did_close(&self, params: DidCloseTextDocumentParams) {
-        self.info("did_close").await;
+        info!("did_close");
         if !self.is_shared {
             let mut text_documents = self.text_documents.write().await;
             text_documents.listen(
@@ -114,16 +103,16 @@ impl LanguageServer for LspServer {
                 &serde_json::to_value(&params).unwrap(),
             );
         }
-        self.info("did_close done").await;
+        info!("did_close done");
     }
 
     async fn hover(&self, _params: HoverParams) -> Result<Option<Hover>> {
-        self.error("method not found").await;
+        error!("method not found");
         Err(Error::method_not_found())
     }
 
     async fn shutdown(&self) -> Result<()> {
-        self.log("shutdown").await;
+        warn!("shutdown");
         Ok(())
     }
 }
