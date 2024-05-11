@@ -1,4 +1,7 @@
-use std::sync::{Arc, RwLock};
+use std::sync::{
+    mpsc::{self, Sender},
+    Arc, RwLock,
+};
 
 use tower_lsp::{lsp_types::MessageType, Client};
 use tracing::{
@@ -8,22 +11,26 @@ use tracing::{
 };
 
 pub struct LspSubscriber {
-    client: Arc<Client>,
+    tx: Sender<(MessageType, String)>,
     count: RwLock<u64>,
 }
 
 impl LspSubscriber {
     pub fn new(client: Arc<Client>) -> LspSubscriber {
+        let (tx, rx) = mpsc::channel();
+        let rx_client = Arc::clone(&client);
+        tokio::spawn(async move {
+            while let Ok((typ, message)) = rx.recv() {
+                rx_client.log_message(typ, message).await;
+            }
+        });
         LspSubscriber {
-            client,
             count: RwLock::new(0),
+            tx,
         }
     }
     fn log(&self, typ: MessageType, message: String) {
-        let client = Arc::clone(&self.client);
-        tokio::spawn(async move {
-            client.log_message(typ, message).await;
-        });
+        let _ = self.tx.send((typ, message));
     }
 }
 
