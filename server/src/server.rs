@@ -10,7 +10,7 @@ use tower_lsp::lsp_types::{
     ServerInfo, TextDocumentSyncCapability, TextDocumentSyncKind,
 };
 use tower_lsp::{Client, LanguageServer};
-use tracing::{error, info, warn};
+use tracing::{error, info, instrument, warn};
 
 pub struct LspServer {
     _client: Arc<Client>,
@@ -65,13 +65,15 @@ impl LanguageServer for LspServer {
         })
     }
 
+    #[instrument]
     async fn initialized(&self, _params: InitializedParams) {
-        info!("initialized");
-        info!("initialized done");
+        info!("start");
+        info!("done");
     }
 
+    #[instrument]
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
-        info!("did_open");
+        info!("start");
         if !self.is_shared {
             let mut text_documents = self.text_documents.write().await;
             text_documents.listen(
@@ -79,11 +81,12 @@ impl LanguageServer for LspServer {
                 &serde_json::to_value(&params).unwrap(),
             );
         }
-        info!("did_open done");
+        info!("done");
     }
 
+    #[instrument]
     async fn did_change(&self, params: DidChangeTextDocumentParams) {
-        info!("did_change");
+        info!("start");
         if !self.is_shared {
             let mut text_documents = self.text_documents.write().await;
             text_documents.listen(
@@ -91,11 +94,12 @@ impl LanguageServer for LspServer {
                 &serde_json::to_value(&params).unwrap(),
             );
         }
-        info!("did_change done");
+        info!("done");
     }
 
+    #[instrument]
     async fn did_close(&self, params: DidCloseTextDocumentParams) {
-        info!("did_close");
+        info!("start");
         if !self.is_shared {
             let mut text_documents = self.text_documents.write().await;
             text_documents.listen(
@@ -103,7 +107,7 @@ impl LanguageServer for LspServer {
                 &serde_json::to_value(&params).unwrap(),
             );
         }
-        info!("did_close done");
+        info!("done");
     }
 
     async fn hover(&self, _params: HoverParams) -> Result<Option<Hover>> {

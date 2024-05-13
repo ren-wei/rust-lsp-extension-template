@@ -1,6 +1,9 @@
-use std::sync::{
-    mpsc::{self, Sender},
-    Arc, RwLock,
+use std::{
+    collections::HashMap,
+    sync::{
+        mpsc::{self, Sender},
+        Arc, RwLock,
+    },
 };
 
 use tower_lsp::{lsp_types::MessageType, Client};
@@ -13,6 +16,8 @@ use tracing::{
 pub struct LspSubscriber {
     tx: Sender<(MessageType, String)>,
     count: RwLock<u64>,
+    span_name_map: RwLock<HashMap<span::Id, String>>,
+    prefix: RwLock<Vec<String>>,
 }
 
 impl LspSubscriber {
@@ -27,6 +32,8 @@ impl LspSubscriber {
         LspSubscriber {
             count: RwLock::new(0),
             tx,
+            span_name_map: RwLock::new(HashMap::new()),
+            prefix: RwLock::new(vec![]),
         }
     }
     fn log(&self, typ: MessageType, message: String) {
@@ -39,9 +46,12 @@ impl Subscriber for LspSubscriber {
         *metadata.level() <= Level::DEBUG
     }
 
-    fn new_span(&self, _span: &span::Attributes<'_>) -> span::Id {
+    fn new_span(&self, span: &span::Attributes<'_>) -> span::Id {
         *self.count.write().unwrap() += 1;
-        span::Id::from_u64(*self.count.read().unwrap())
+        let mut span_name_map = self.span_name_map.write().unwrap();
+        let id = span::Id::from_u64(*self.count.read().unwrap());
+        span_name_map.insert(id.clone(), span.metadata().name().to_string());
+        id
     }
 
     fn record(&self, span: &span::Id, values: &span::Record<'_>) {
@@ -75,15 +85,22 @@ impl Subscriber for LspSubscriber {
             message: String::new(),
         };
         event.record(&mut logger_visitor);
-        self.log(typ, format!("{}", logger_visitor.message));
+        let prefix = self.prefix.read().unwrap();
+        self.log(
+            typ,
+            format!("{}{}", prefix.join(""), logger_visitor.message),
+        );
     }
 
     fn enter(&self, id: &span::Id) {
-        self.log(MessageType::LOG, format!("enter:{}", id.into_u64()));
+        let mut prefix = self.prefix.write().unwrap();
+        let span_name_map = self.span_name_map.read().unwrap();
+        prefix.push(format!("{}:", span_name_map.get(id).unwrap()));
     }
 
-    fn exit(&self, id: &span::Id) {
-        self.log(MessageType::LOG, format!("exit:{}", id.into_u64()));
+    fn exit(&self, _id: &span::Id) {
+        let mut prefix = self.prefix.write().unwrap();
+        prefix.pop();
     }
 }
 
