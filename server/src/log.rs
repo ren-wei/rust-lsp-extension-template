@@ -2,7 +2,7 @@ use std::{
     collections::HashMap,
     sync::{
         mpsc::{self, Sender},
-        Arc, RwLock,
+        RwLock,
     },
 };
 
@@ -21,12 +21,11 @@ pub struct LspSubscriber {
 }
 
 impl LspSubscriber {
-    pub fn new(client: Arc<Client>) -> LspSubscriber {
+    pub fn new(client: Client) -> LspSubscriber {
         let (tx, rx) = mpsc::channel();
-        let rx_client = Arc::clone(&client);
         tokio::spawn(async move {
             while let Ok((typ, message)) = rx.recv() {
-                rx_client.log_message(typ, message).await;
+                client.log_message(typ, message).await;
             }
         });
         LspSubscriber {

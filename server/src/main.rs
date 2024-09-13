@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use rust_lsp_extension_template_server::{log::LspSubscriber, server::LspServer};
 use tower_lsp::{LspService, Server};
 
@@ -9,8 +7,7 @@ async fn main() {
     let stdout = tokio::io::stdout();
 
     let (service, socket) = LspService::new(|client| {
-        let client = Arc::new(client);
-        let subscriber = LspSubscriber::new(Arc::clone(&client));
+        let subscriber = LspSubscriber::new(client.clone());
         tracing::subscriber::set_global_default(subscriber).unwrap();
         LspServer::new(client, None)
     });

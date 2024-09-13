@@ -13,14 +13,14 @@ use tower_lsp::{Client, LanguageServer};
 use tracing::{error, info, instrument, warn};
 
 pub struct LspServer {
-    _client: Arc<Client>,
+    _client: Client,
     is_shared: bool,
     text_documents: Arc<RwLock<TextDocuments>>,
 }
 
 impl LspServer {
     pub fn new(
-        client: Arc<Client>,
+        client: Client,
         shared_text_documents: Option<Arc<RwLock<TextDocuments>>>,
     ) -> LspServer {
         let is_shared;
