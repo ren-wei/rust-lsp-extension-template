@@ -1,6 +1,6 @@
 {
 	"name": "rust-lsp-extension-template-client",
-	"description": "locale service client",
+	"description": "rust-lsp-extension-template-client",
 	"author": "ren-wei",
 	"license": "MIT",
 	"version": "0.0.1",

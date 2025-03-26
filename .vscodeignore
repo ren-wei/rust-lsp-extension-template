@@ -1,3 +1,4 @@
+.github/**
 .vscode/**
 **/*.ts
 **/*.map
@@ -14,4 +15,6 @@ client/node_modules/**
 !client/node_modules/{minimatch,brace-expansion,concat-map,balanced-match}/**
 !client/node_modules/{semver,lru-cache,yallist}/**
 server/**
+!server/target/release/rust-lsp-extension-template-server
 !server/target/x86_64-pc-windows-gnu/release/rust-lsp-extension-template-server.exe
+!server/target/x86_64-unknown-linux-musl/release/rust-lsp-extension-template-server

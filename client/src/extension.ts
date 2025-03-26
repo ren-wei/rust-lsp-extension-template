@@ -11,7 +11,7 @@ let client: LanguageClient;
 
 export function activate(context: ExtensionContext) {
     const serverModule = context.asAbsolutePath(
-        path.join("server", "target", ...(process.platform === "darwin" ? ["release", "rust-lsp-extension-template-server"] : ["x86_64-pc-windows-gnu", "release", "rust-lsp-extension-template-server.exe"]))
+        path.join("server", "target", ...(process.platform === "darwin" ? ["release", "rust-lsp-extension-template-server"] : process.platform === "win32" ? ["x86_64-pc-windows-gnu", "release", "rust-lsp-extension-template-server.exe"] : ["x86_64-unknown-linux-musl", "release", "rust-lsp-extension-template-server"]))
     );
 
     const serverOptions: ServerOptions = {
